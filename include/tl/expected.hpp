@@ -22,6 +22,7 @@
 
 #include <exception>
 #include <functional>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 
@@ -1188,10 +1189,12 @@ template <class T, class E> struct expected_default_ctor_base<T, E, false> {
 
 template <class E> class bad_expected_access : public std::exception {
 public:
-  explicit bad_expected_access(E e) : m_val(std::move(e)) {}
+  explicit bad_expected_access(E e) : m_val(std::move(e)) {
+    m_what = make_what(m_val);
+  }
 
   virtual const char *what() const noexcept override {
-    return "Bad expected access";
+    return m_what.c_str();
   }
 
   const E &error() const & { return m_val; }
@@ -1201,6 +1204,15 @@ public:
 
 private:
   E m_val;
+  std::string m_what;
+
+  template<typename U>
+  static std::string make_what(const U &) {
+    return "Bad expected access";
+  }
+  static std::string make_what(std::error_code e) {
+    return e.message();
+  }
 };
 
 /// An `expected<T, E>` object is an object that contains the storage for
