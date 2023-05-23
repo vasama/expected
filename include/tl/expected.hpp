@@ -1475,6 +1475,12 @@ public:
       : impl_base(in_place, il, std::forward<Args>(args)...),
         ctor_base(detail::default_constructor_tag{}) {}
 
+  template <class U = T, detail::enable_if_t<std::is_void<U>::value> * =
+                nullptr>
+  constexpr expected(in_place_t)
+      : impl_base(in_place),
+        ctor_base(detail::default_constructor_tag{}) {}
+
   template <class G = E,
             detail::enable_if_t<std::is_constructible<E, const G &>::value> * =
                 nullptr,
